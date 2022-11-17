@@ -1,0 +1,54 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.0.3
+
+executors:
+  node_docker:
+    docker: 
+      - image: cimg/node:16.16.0
+
+jobs:
+  build:
+    executor: node_docker
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          command: |
+            npm run build 
+  test:
+    executor: node_docker
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          command: |
+            npm run test-ci-reporting
+      - run:
+          name: Copy tests results for storing
+          command: |
+            mkdir test-results/
+            cp test-results.xml test-results/
+          when: always
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+  lint:
+    executor: node_docker
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          command: |
+            npm run lint
+            
+workflows:
+  build_test_deploy:
+      jobs:
+        - build  
+        - lint
+        - test   
+
+# VS Code Extension Version: 1.0.2
